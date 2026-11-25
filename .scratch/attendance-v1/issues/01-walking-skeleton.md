@@ -14,14 +14,14 @@ This ticket also sets up the test harness: Vitest tests call the Attendance modu
 
 **Blocked by:** None (can start immediately)
 
-**Status:** ready-for-human
+**Status:** resolved
 
-- [ ] The app runs locally against Postgres from Docker Compose, and the admin page shows an empty On site now list
+- [x] The app runs locally against Postgres from Docker Compose, and the admin page shows an empty On site now list
 - [x] The Attendance module exists with an On site now query that takes `now` explicitly, and the web layer only calls it
-- [ ] Drizzle migrations exist and are applied both to the Compose database and to PGlite in tests
+- [x] Drizzle migrations exist and are applied both to the Compose database and to PGlite in tests
 - [x] At least one Vitest test exercises the Attendance module through its interface against PGlite with a fixed `now`
 - [x] One Playwright smoke test loads the admin page
-- [ ] CI on push and PR to `main` runs lint, typecheck, Vitest, build and Playwright, and passes
+- [x] CI on push and PR to `main` runs lint, typecheck, Vitest, build and Playwright, and passes
 - [x] Node 24, React 19 and pnpm are used, and the workplace time zone and database connection come from environment variables
 
 ## Comments
@@ -34,3 +34,5 @@ There are two things an agent couldn't verify, so they need a human (hence ready
 - **CI:** `.github/workflows/ci.yml` runs lint, typecheck, Vitest, build, then Compose Postgres + migrate + Playwright. It can't run until the GitHub repo exists (ticket 14). Tick the CI box when the first push is green.
 
 Note: `pnpm add` crashes in pnpm 10.25 while `components.json` exists (see README). shadcn init was run with npm in a scratch copy, and its files were brought across.
+
+**2026-11-25 (agent):** Verified the rest. Docker Desktop is set up and `docker compose up --detach --wait db` brings up Postgres 18 (healthy), `pnpm db:migrate` creates `employee` and `time_entry`, and `pnpm dev` serves `/admin` with "Nobody is on site.". The Playwright smoke test also passes against the production build on the Compose database. CI run for `ae44491` succeeded: https://github.com/samuelrendl/attendance-system/actions/runs/45711174487. All boxes ticked.
