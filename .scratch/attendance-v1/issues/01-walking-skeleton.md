@@ -14,12 +14,23 @@ This ticket also sets up the test harness: Vitest tests call the Attendance modu
 
 **Blocked by:** None (can start immediately)
 
-**Status:** ready-for-agent
+**Status:** ready-for-human
 
 - [ ] The app runs locally against Postgres from Docker Compose, and the admin page shows an empty On site now list
-- [ ] The Attendance module exists with an On site now query that takes `now` explicitly, and the web layer only calls it
+- [x] The Attendance module exists with an On site now query that takes `now` explicitly, and the web layer only calls it
 - [ ] Drizzle migrations exist and are applied both to the Compose database and to PGlite in tests
-- [ ] At least one Vitest test exercises the Attendance module through its interface against PGlite with a fixed `now`
-- [ ] One Playwright smoke test loads the admin page
+- [x] At least one Vitest test exercises the Attendance module through its interface against PGlite with a fixed `now`
+- [x] One Playwright smoke test loads the admin page
 - [ ] CI on push and PR to `main` runs lint, typecheck, Vitest, build and Playwright, and passes
-- [ ] Node 24, React 19 and pnpm are used, and the workplace time zone and database connection come from environment variables
+- [x] Node 24, React 19 and pnpm are used, and the workplace time zone and database connection come from environment variables
+
+## Comments
+
+**2026-11-25 (agent):** Implemented. Lint, typecheck, Vitest (2 tests against PGlite) and the production build pass locally. The Playwright smoke test passed against `pnpm build && pnpm start`, after `pnpm db:migrate` had been run against a PGlite socket server (`pnpm db:local`).
+
+There are two things an agent couldn't verify, so they need a human (hence ready-for-human):
+
+- **Compose:** Docker isn't installed on the dev machine, so `docker compose up --detach --wait db` → `pnpm db:migrate` → `pnpm dev` hasn't been run. Migrations *are* applied to PGlite in tests and to a Postgres-protocol server. Tick the first and third boxes once the Compose run works.
+- **CI:** `.github/workflows/ci.yml` runs lint, typecheck, Vitest, build, then Compose Postgres + migrate + Playwright. It can't run until the GitHub repo exists (ticket 14). Tick the CI box when the first push is green.
+
+Note: `pnpm add` crashes in pnpm 10.25 while `components.json` exists (see README). shadcn init was run with npm in a scratch copy, and its files were brought across.

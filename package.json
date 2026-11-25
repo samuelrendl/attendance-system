@@ -2,11 +2,21 @@
   "name": "attendance-system",
   "version": "0.1.0",
   "private": true,
+  "packageManager": "pnpm@10.25.0",
+  "engines": {
+    "node": "24.x"
+  },
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "typecheck": "next typegen && tsc --noEmit",
+    "test": "vitest run",
+    "test:e2e": "playwright test",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "drizzle-kit migrate",
+    "db:local": "pglite-server --port=5432 --max-connections=10"
   },
   "dependencies": {
     "@base-ui/react": "^1.9.0",
@@ -34,9 +44,7 @@
     "eslint": "^9",
     "eslint-config-next": "16.4.6",
     "tailwindcss": "4.3.3",
-    "tsx": "^4.23.15",
     "typescript": "^5",
     "vitest": "^5.1.2"
-  },
-  "packageManager": "pnpm@10.25.0"
+  }
 }

@@ -27,3 +27,7 @@ Rules, all in the Attendance module:
 - [ ] The Admin's On site now list shows On site Employees with their Clock in time, and excludes Missed clock-outs
 - [ ] Attendance-module tests cover: the toggle; the 16-hour boundary (just under is On site, just over is a Missed clock-out); a tap after a Missed clock-out clocks in; an overnight Time entry (22:00 → 06:00) is closed by the morning tap and belongs to the earlier day; lunch out and back in gives two Time entries and the right hours today; a Deactivated Employee can't tap
 - [ ] Playwright E2E: activate a Kiosk → tap a name → enter the PIN → see the Clocked in confirmation
+
+## Comments
+
+**2026-11-25 (agent, from ticket 01):** `onSiteNow` already applies the 16-hour rule (open entries whose Clock in is at most 16 hours before `now`), but no test covers it yet, because there was no way to create Employees or Time entries through the interface. This ticket's boundary and "excludes Missed clock-outs" tests are what verify it. It doesn't yet exclude voided Time entries or Deactivated Employees.
