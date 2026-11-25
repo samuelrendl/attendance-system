@@ -1,0 +1,3 @@
+# UI SDK only for the Kiosk name picker; shadcn/ui everywhere else
+
+shadcn/ui provides the theme, design tokens and every standard component (tables, dialogs, forms, buttons). UI SDK (Vercel Labs, beta since November 2026) is used in exactly one place: the Kiosk's Employee name picker. That picker is composed from `createListbox`, `createTypeahead` and `createRovingFocus` and styled with shadcn's tokens. It is the one component whose keyboard and touch behaviour is custom enough to justify UI SDK, and confining a beta library to one component limits the damage when its API changes. Don't "unify" the app on one library without revisiting this. If UI SDK doesn't work out, the fallback for the picker is shadcn's Command component.
