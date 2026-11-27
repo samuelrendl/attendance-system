@@ -81,10 +81,11 @@ The Admin adds, renames, re-PINs, Deactivates and reactivates Employees under **
 - `src/auth/`: **Admin access** on Better Auth (Drizzle adapter, sign-up disabled): log in and out, read the Admin session, create the Admin on first start, reset the password. Its tables are in `src/auth/schema.ts`.
 - `src/server/`: wiring for the web layer (configuration, the database connection, `requireAdmin()` in `admin-session.ts`, `currentKiosk()` in `kiosk-device.ts`, the start-up hook).
 - `src/proxy.ts`: sends visitors without a session cookie from `/admin` to `/login`. Only a fast path; the real check is `requireAdmin()`. On `/kiosk` it sets the Kiosk cookie again, so its expiry keeps moving on.
-- `scripts/`: command-line tools. Each `*.ts` (`migrate`, `reset-admin-password`) is bundled into a self-contained `dist/<name>.mjs` by `pnpm build` and runs inside the app container; `setup-pi.sh` is the one-time Pi setup wizard.
+- `scripts/`: command-line tools. Each `*.ts` (`migrate`, `reset-admin-password`) is bundled into a self-contained `dist/<name>.mjs` by `pnpm build` and runs inside the app container; `setup-pi.sh` is the one-time Pi setup wizard, and `deploy.sh` deploys a release on the Pi (tested in `scripts/tests/`).
 - `src/app/`: Next.js pages. They call the Attendance module and render; no domain rules live here. Every admin page and Server Action calls `requireAdmin()` from `src/server/admin-session.ts` first; every Kiosk page and Server Action calls `currentKiosk()` from `src/server/kiosk-device.ts` instead, and never needs an Admin session.
 - `drizzle/`: migrations.
 - `Dockerfile`, `compose.yaml`: the production image and stack (see below).
+- `.github/workflows/`: `ci.yml` (checks on pushes and pull requests to `main`) and `release.yml` (a `v*` tag deploys to the Pi).
 - `e2e/`: Playwright tests.
 
 ## Production: one-time Pi setup
@@ -117,11 +118,12 @@ docker compose up --build --detach --wait
 
 Then open http://localhost:3000/admin. `docker compose down` stops it (add `--volumes` to delete the data).
 
-**Deploying a new version** (what the release does on the Pi):
+**Deploying a new version** is `scripts/deploy.sh <tag>` (see [Releases](#releases)), which runs, in order:
 
 ```sh
 docker compose pull
 docker compose run --rm migrate
+# then records IMAGE_TAG=<tag> in .env
 docker compose up --detach --wait
 ```
 
@@ -138,6 +140,24 @@ docker compose exec backup sh -c 'pg_restore --no-owner --dbname=attendance /bac
 **Commands in the app container.** The image ships `dist/` next to `server.js`, so run a script with `docker compose exec app node dist/<name>.mjs`. To add one, create `scripts/<name>.ts` (it may import from `@/...`).
 
 **Images** build natively for linux/amd64 and linux/arm64 (the Pi). CI checks the arm64 build on an ARM runner.
+
+## Releases
+
+Pushing a `v*` tag releases that commit to the Pi (`.github/workflows/release.yml`, ADR-0001):
+
+```sh
+git tag v1.0.0
+git push origin v1.0.0
+```
+
+1. **image** (ARM runner): builds the arm64 image with `APP_VERSION=<tag>` and pushes `ghcr.io/samuelrendl/attendance-system:<tag>`.
+2. **deploy**: joins the tailnet as a temporary `tag:ci` device (`TS_OAUTH_CLIENT_ID`, `TS_OAUTH_SECRET`), SSHes to `PI_USER@PI_HOST` with `PI_SSH_PRIVATE_KEY`, checking the host key against `PI_SSH_KNOWN_HOSTS`, copies `compose.yaml` and `scripts/deploy.sh` into `~/attendance/`, and runs `deploy.sh <tag>` there.
+
+`deploy.sh` pulls, migrates, records `IMAGE_TAG=<tag>` in `~/attendance/.env` (editing only that line, never printing the file), then recreates the stack and waits for the app to be healthy. If the pull or a migration fails, it stops before touching the running containers or `.env`, so the previous version keeps serving and the run fails. `.env` always names the last version whose migrations succeeded, so a plain `docker compose up --detach --wait` on the Pi starts that one.
+
+The version shows on the login page and in the Admin header (`dev` outside a release). Pushes and pull requests never deploy; only tags do.
+
+**Rolling back** is deploying an older tag: re-run that tag's Release run in GitHub Actions (possible for 30 days), or use *Run workflow* on the Release workflow with *Use workflow from* set to the tag. On the Pi itself, `~/attendance/deploy.sh v1.0.0` does the same with the `compose.yaml` that's there. Migrations only go forward: an older version runs against the newer schema, so keep migrations additive (or restore a backup).
 
 ## Known issue: `pnpm add` with pnpm 10.25
 

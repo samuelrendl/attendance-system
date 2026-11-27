@@ -5,7 +5,7 @@
 # (env_file), so a new app setting only needs adding to .env.example. The
 # variables in the "Compose" section of .env.example are read by this file.
 #
-# Deploying a new IMAGE_TAG: `docker compose run --rm migrate` first, then
+# Deploying a new IMAGE_TAG (scripts/deploy.sh): `docker compose run --rm migrate` first, then
 # `docker compose up --detach --wait`. A bare `up` removes the old app
 # container before migrate has finished (see README "Production stack").
 

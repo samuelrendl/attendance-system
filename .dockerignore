@@ -17,3 +17,6 @@ next-env.d.ts
 Dockerfile
 .dockerignore
 compose.yaml
+# Host-side scripts and their tests; the image needs only scripts/*.ts.
+scripts/*.sh
+scripts/tests

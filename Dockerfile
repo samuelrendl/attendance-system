@@ -23,11 +23,17 @@ FROM base AS builder
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 # No configuration at build time: every setting is read at request time.
+# APP_VERSION is the one exception: the release's git tag (release.yml),
+# shown in the app and baked into the prerendered pages.
+ARG APP_VERSION=dev
+ENV APP_VERSION=$APP_VERSION
 RUN mkdir -p public && pnpm build
 
 FROM node:${NODE_VERSION}-slim AS runner
 WORKDIR /app
-ENV NODE_ENV=production \
+ARG APP_VERSION=dev
+ENV APP_VERSION=$APP_VERSION \
+    NODE_ENV=production \
     NEXT_TELEMETRY_DISABLED=1 \
     PORT=3000 \
     HOSTNAME=0.0.0.0

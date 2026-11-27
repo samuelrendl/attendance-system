@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { AppVersion } from "@/components/app-version";
 import { LogOutButton } from "./log-out-button";
 
 // Only static chrome here: the Admin session is checked by each page and
@@ -14,7 +15,10 @@ export default function AdminLayout({ children }: LayoutProps<"/admin">) {
             <Link href="/admin/employees">Employees</Link>
             <Link href="/admin/kiosks">Kiosks</Link>
           </nav>
-          <LogOutButton />
+          <div className="flex items-center gap-4">
+            <AppVersion className="text-xs text-muted-foreground" />
+            <LogOutButton />
+          </div>
         </div>
       </header>
       {children}
