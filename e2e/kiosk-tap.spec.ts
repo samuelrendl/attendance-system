@@ -77,4 +77,9 @@ test("a wrong PIN shows a plain error and records nothing", async ({ page }) => 
   await page.getByLabel("PIN", { exact: true }).fill("1357");
   await page.getByRole("button", { name: "OK" }).click();
   await expect(confirmation(page)).toContainText("Clocked in");
+
+  // Clock out again, so nobody is left On site for other tests.
+  await page.getByRole("button", { name: "Done" }).click();
+  await tap(page, name, "1357");
+  await expect(confirmation(page)).toContainText("Clocked out");
 });
