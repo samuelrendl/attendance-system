@@ -54,9 +54,19 @@ The settings for Compose itself (image tag, Postgres credentials, host ports, ba
 - `src/server/`: wiring for the web layer (configuration, the database connection).
 - `src/app/`: Next.js pages. They call the Attendance module and render; no domain rules live here. (Admin login arrives in ticket 02, after which every admin page also checks the Admin session.)
 - `drizzle/`: migrations.
-- `scripts/`: command-line scripts that run inside the app container (`migrate`). Each is bundled into one self-contained file.
+- `scripts/`: `*.ts` are command-line scripts that run inside the app container (`migrate`), each bundled into one self-contained file. `setup-pi.sh` is the one-time Pi setup wizard.
 - `Dockerfile`, `compose.yaml`: the production image and stack (see below).
 - `e2e/`: Playwright tests.
+
+## Production: one-time Pi setup
+
+The app runs on a Raspberry Pi over Tailscale (see `docs/adr/0001-self-host-on-raspberry-pi.md`). To set up a Pi, Tailscale and the GitHub secrets for releases, run the wizard in Git Bash from the repo:
+
+```sh
+./scripts/setup-pi.sh
+```
+
+It walks through each step, runs the Pi's commands over SSH, and keeps its answers in `.env.pi` (git-ignored), so it can be re-run safely. On the Pi, the app lives in `~/attendance/`, with its settings in `~/attendance/.env`.
 
 ## Production stack
 
