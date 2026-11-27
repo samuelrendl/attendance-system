@@ -8,7 +8,7 @@ if (existsSync(".env")) {
 
 export default defineConfig({
   dialect: "postgresql",
-  schema: "./src/attendance/schema.ts",
+  schema: ["./src/attendance/schema.ts", "./src/auth/schema.ts"],
   out: "./drizzle",
   dbCredentials: {
     url: process.env.DATABASE_URL ?? "",
