@@ -26,4 +26,11 @@ Success or failure is visible in GitHub Actions. Re-running the release for an o
 **2026-11-27 (agent, from ticket 14):** The setup wizard (`scripts/setup-pi.sh`) creates these. Use exactly these names:
 - Secrets: `TS_OAUTH_CLIENT_ID` and `TS_OAUTH_SECRET`, for `tailscale/github-action@v4` with `tags: tag:ci`. Also `PI_SSH_PRIVATE_KEY` (ed25519, stored with a trailing newline).
 - Variables (`vars.*`): `PI_HOST` (the Pi's MagicDNS `*.ts.net` name), `PI_USER`, and `PI_SSH_KNOWN_HOSTS` (the Pi's ed25519 host key, keyed by `PI_HOST`). Use it with `StrictHostKeyChecking=yes`.
-- On the Pi: deploy into `~/attendance/`. `~/attendance/.env` already holds every production setting, so the workflow must not write or print it. Copy `compose.yaml` there, set the image tag, then run `docker compose pull && docker compose up -d`. The Pi is already logged in to `ghcr.io`.
+- On the Pi: deploy into `~/attendance/`. `~/attendance/.env` already holds every production setting, so the workflow must never print it. The Pi is already logged in to `ghcr.io`.
+
+**2026-11-27 (agent, from ticket 13):** This corrects the sequence above. A bare `docker compose pull && docker compose up -d` is unsafe: Compose removes the old app container before migrate finishes, so a failed migration leaves nothing serving. The tested deploy, run in `~/attendance/`:
+1. Copy `compose.yaml` there.
+2. Upsert `IMAGE_TAG=<version>` into `~/attendance/.env` with a replace-the-line edit, never printing the file. Don't just export it, or a later manual `up` falls back to the `local` tag.
+3. Run `docker compose pull && docker compose run --rm migrate && docker compose up --detach --wait`. The `run` step leaves the running app alone and exits non-zero if migrations fail, which fails the workflow before anything is replaced.
+
+See ticket 13's comment and the README's "Production stack" section.

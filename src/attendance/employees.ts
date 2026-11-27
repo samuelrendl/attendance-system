@@ -29,7 +29,7 @@ const columns = {
 };
 
 /** The Employee commands and queries of the Attendance module. */
-export function createEmployees(db: AttendanceDatabase) {
+export function employeeManagement(db: AttendanceDatabase) {
   async function update(
     employeeId: string,
     values: PgUpdateSetSource<typeof employee>,

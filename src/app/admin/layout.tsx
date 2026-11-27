@@ -8,10 +8,11 @@ export default function AdminLayout({ children }: LayoutProps<"/admin">) {
     <>
       <header className="border-b">
         <div className="mx-auto flex w-full max-w-3xl items-center justify-between px-6 py-3">
-          <nav className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm">
-            <span className="font-heading text-base font-semibold">Attendance</span>
-            <Link href="/admin" className="hover:underline">On site now</Link>
-            <Link href="/admin/employees" className="hover:underline">Employees</Link>
+          <nav className="flex items-center gap-4 text-sm">
+            <span className="font-heading font-semibold">Attendance</span>
+            <Link href="/admin">On site now</Link>
+            <Link href="/admin/employees">Employees</Link>
+            <Link href="/admin/kiosks">Kiosks</Link>
           </nav>
           <LogOutButton />
         </div>
