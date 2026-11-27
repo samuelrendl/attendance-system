@@ -1,10 +1,12 @@
 import { and, asc, eq, gte, isNull } from "drizzle-orm";
 import type { PgDatabase, PgQueryResultHKT } from "drizzle-orm/pg-core";
+import { createEmployees } from "./employees";
 import * as schema from "./schema";
 
 const { employee, timeEntry } = schema;
 
 export { schema };
+export type { Employee, EmployeeProblem, EmployeeResult } from "./employees";
 
 /** Any Drizzle Postgres database with the Attendance schema: node-postgres in the app, PGlite in tests. */
 export type AttendanceDatabase = PgDatabase<PgQueryResultHKT, typeof schema>;
@@ -32,6 +34,8 @@ export function createAttendance({ db, timeZone }: AttendanceOptions) {
   assertKnownTimeZone(timeZone);
 
   return {
+    ...createEmployees(db),
+
     /** Every Employee currently On site, earliest Clock in first. */
     async onSiteNow(now: Date): Promise<OnSiteEmployee[]> {
       const missedClockOutBefore = new Date(
