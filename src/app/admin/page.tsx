@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { connection } from "next/server";
 import { Suspense } from "react";
+import { requireAdmin } from "@/server/admin-session";
 import { getServer } from "@/server/attendance";
 
 export const metadata: Metadata = {
@@ -20,6 +21,7 @@ export default function AdminPage() {
 
 async function OnSiteNow() {
   await connection();
+  await requireAdmin();
   const { attendance, workplaceTimeZone } = getServer();
   const onSite = await attendance.onSiteNow(new Date());
 

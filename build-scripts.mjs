@@ -1,12 +1,12 @@
-// Bundles each scripts/*.ts into a self-contained dist/scripts/*.mjs.
-// The production image ships these next to the standalone server (whose
-// traced node_modules only cover the app), so `node scripts/<name>.mjs`
-// works inside the app container. See README "Production stack".
+// Bundles each scripts/*.ts into a self-contained dist/<name>.mjs.
+// The production image ships dist/ next to the standalone server, whose
+// traced node_modules only cover the app, so `node dist/<name>.mjs` works
+// inside the app container (README "Production stack").
 import { build } from "esbuild";
 
 await build({
   entryPoints: ["scripts/*.ts"],
-  outdir: "dist/scripts",
+  outdir: "dist",
   outExtension: { ".js": ".mjs" },
   bundle: true,
   platform: "node",

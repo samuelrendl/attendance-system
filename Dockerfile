@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1
 # Production image: the Next.js standalone server plus the bundled scripts in
-# dist/scripts (migrate, and any later ones such as reset-password).
+# dist/ (migrate, reset-admin-password, ...).
 # Builds natively on linux/amd64 and linux/arm64 (the Raspberry Pi).
 
 ARG NODE_VERSION=24
@@ -34,7 +34,7 @@ ENV NODE_ENV=production \
 COPY --from=builder --chown=node:node /app/.next/standalone ./
 COPY --from=builder --chown=node:node /app/.next/static ./.next/static
 COPY --from=builder --chown=node:node /app/public ./public
-COPY --from=builder --chown=node:node /app/dist/scripts ./scripts
+COPY --from=builder --chown=node:node /app/dist ./dist
 COPY --from=builder --chown=node:node /app/drizzle ./drizzle
 USER node
 EXPOSE 3000

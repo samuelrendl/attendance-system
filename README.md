@@ -17,7 +17,7 @@ pnpm db:migrate
 pnpm dev
 ```
 
-Then open http://localhost:3000/admin.
+Then open http://localhost:3000/admin and log in with `ADMIN_EMAIL` and `ADMIN_INITIAL_PASSWORD` from `.env`. The first start creates that Admin.
 
 To run the whole production stack instead, see [Production stack](#production-stack).
 
@@ -27,10 +27,14 @@ No Docker? `pnpm db:local` serves an in-memory Postgres (PGlite) on port 5432 in
 
 Every setting is an environment variable; `.env.example` documents them.
 
-| Variable              | Meaning                                                   |
-| --------------------- | --------------------------------------------------------- |
-| `DATABASE_URL`        | Postgres connection string                                |
-| `WORKPLACE_TIME_ZONE` | IANA time zone (e.g. `Europe/London`) for days and weeks |
+| Variable                 | Meaning                                                                                       |
+| ------------------------ | --------------------------------------------------------------------------------------------- |
+| `DATABASE_URL`           | Postgres connection string                                                                    |
+| `WORKPLACE_TIME_ZONE`    | IANA time zone (e.g. `Europe/London`) for days and weeks                                     |
+| `BETTER_AUTH_SECRET`     | Signs the Admin session cookies; at least 32 characters (`openssl rand -base64 32`)          |
+| `BETTER_AUTH_URL`        | The URL the app is served at (`https://<host>.ts.net` on the Pi); `https://` makes cookies Secure |
+| `ADMIN_EMAIL`            | The Admin created on the first start                                                          |
+| `ADMIN_INITIAL_PASSWORD` | That Admin's first password (at least 8 characters). Ignored once the Admin exists           |
 
 The settings for Compose itself (image tag, Postgres credentials, host ports, backups) are in the "Compose" section of `.env.example`.
 
@@ -40,21 +44,38 @@ The settings for Compose itself (image tag, Postgres credentials, host ports, ba
 | ------------------ | ------------------------------------------------------------- |
 | `pnpm lint`        | ESLint                                                        |
 | `pnpm typecheck`   | Generates Next.js route types, then runs `tsc`               |
-| `pnpm test`        | Vitest: the Attendance module against in-process Postgres     |
+| `pnpm test`        | Vitest: the Attendance module and Admin access against in-process Postgres |
 | `pnpm build`       | Production build (standalone server), plus `build:scripts`   |
-| `pnpm build:scripts` | Bundles each `scripts/*.ts` into `dist/scripts/*.mjs` for the image |
+| `pnpm build:scripts` | Bundles each `scripts/*.ts` into a self-contained `dist/<name>.mjs` (`migrate`, `reset-admin-password`) |
+| `pnpm admin:reset-password` | Sets a new Admin password (prompts for it) and ends every Admin session |
 | `pnpm test:e2e`    | Playwright against the production build (run `build` first)  |
-| `pnpm db:generate` | Generates a migration from `src/attendance/schema.ts`         |
+| `pnpm db:generate` | Generates a migration from `src/attendance/schema.ts` and `src/auth/schema.ts` |
 | `pnpm db:migrate`  | Applies migrations to `DATABASE_URL`                          |
 | `pnpm db:local`    | In-memory Postgres (PGlite) on port 5432, for when there's no Docker |
+
+## Admin access
+
+There is exactly one Admin and no public sign-up. On every start, the app creates the Admin from `ADMIN_EMAIL` and `ADMIN_INITIAL_PASSWORD` if no Admin exists yet; once one exists, those two variables are ignored.
+
+To reset a forgotten password, run the reset command where the app's environment variables are set. It prompts for the new password twice (or reads one line from stdin), sets it, and logs the Admin out everywhere:
+
+```sh
+pnpm admin:reset-password                      # locally, after pnpm build
+node dist/reset-admin-password.mjs             # same thing, without pnpm
+docker compose exec app node dist/reset-admin-password.mjs   # on the Pi
+```
+
+`dist/reset-admin-password.mjs` is a single bundled file with no dependencies, built by `pnpm build`, and the production image ships `dist/`.
 
 ## Layout
 
 - `src/attendance/`: the **Attendance module**, the one home for every domain rule. Every operation takes `now` explicitly. Tests live next to it and run against PGlite with the real migrations.
-- `src/server/`: wiring for the web layer (configuration, the database connection).
-- `src/app/`: Next.js pages. They call the Attendance module and render; no domain rules live here. (Admin login arrives in ticket 02, after which every admin page also checks the Admin session.)
+- `src/auth/`: **Admin access** on Better Auth (Drizzle adapter, sign-up disabled): log in and out, read the Admin session, create the Admin on first start, reset the password. Its tables are in `src/auth/schema.ts`.
+- `src/server/`: wiring for the web layer (configuration, the database connection, `requireAdmin()` in `admin-session.ts`, the start-up hook).
+- `src/proxy.ts`: sends visitors without a session cookie from `/admin` to `/login`. Only a fast path; the real check is `requireAdmin()`.
+- `scripts/`: command-line tools. Each `*.ts` (`migrate`, `reset-admin-password`) is bundled into a self-contained `dist/<name>.mjs` by `pnpm build` and runs inside the app container; `setup-pi.sh` is the one-time Pi setup wizard.
+- `src/app/`: Next.js pages. They call the Attendance module and render; no domain rules live here. Every admin page and Server Action calls `requireAdmin()` from `src/server/admin-session.ts` first.
 - `drizzle/`: migrations.
-- `scripts/`: `*.ts` are command-line scripts that run inside the app container (`migrate`), each bundled into one self-contained file. `setup-pi.sh` is the one-time Pi setup wizard.
 - `Dockerfile`, `compose.yaml`: the production image and stack (see below).
 - `e2e/`: Playwright tests.
 
@@ -73,7 +94,7 @@ It walks through each step, runs the Pi's commands over SSH, and keeps its answe
 `compose.yaml` is the stack from ADR-0001, the same locally and on the Pi:
 
 - **db**: Postgres 18, data in the `db-data` volume.
-- **migrate**: runs `node scripts/migrate.mjs` (Drizzle's migrator, bundled; the image has no drizzle-kit) and exits. It uses the same migrations table as `pnpm db:migrate`, and each run is one transaction, so a failing migration changes nothing.
+- **migrate**: runs `node dist/migrate.mjs` (Drizzle's migrator, bundled; the image has no drizzle-kit) and exits. It uses the same migrations table as `pnpm db:migrate`, and each run is one transaction, so a failing migration changes nothing.
 - **app**: the Next.js standalone server from the `Dockerfile`, `${IMAGE}:${IMAGE_TAG}`. It starts only after migrate succeeds. Host port `APP_PORT` (3000), on 127.0.0.1.
 - **backup**: `pg_dump` on `BACKUP_SCHEDULE` (02:00 nightly, in `WORKPLACE_TIME_ZONE`) into `BACKUP_DIR` (`./backups`), keeping the newest `BACKUP_KEEP` (14).
 
@@ -106,7 +127,7 @@ docker compose exec backup sh -c 'pg_restore --no-owner --dbname=attendance /bac
 
 (For a database that already has data, add `--clean --if-exists`.)
 
-**Commands in the app container.** The image ships the bundled `scripts/` next to `server.js`, so run one with `docker compose exec app node scripts/<name>.mjs`. To add one, create `scripts/<name>.ts` (it may import from `@/...`).
+**Commands in the app container.** The image ships `dist/` next to `server.js`, so run a script with `docker compose exec app node dist/<name>.mjs`. To add one, create `scripts/<name>.ts` (it may import from `@/...`).
 
 **Images** build natively for linux/amd64 and linux/arm64 (the Pi). CI checks the arm64 build on an ARM runner.
 

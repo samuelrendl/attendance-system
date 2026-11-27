@@ -12,11 +12,11 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
-    // Bundled scripts (pnpm build:scripts):
-    "dist/**",
     // Playwright output:
     "test-results/**",
     "playwright-report/**",
+    // Bundled scripts (pnpm build:scripts):
+    "dist/**",
   ]),
 ]);
 

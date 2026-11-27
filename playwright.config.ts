@@ -1,4 +1,11 @@
+import { existsSync } from "node:fs";
 import { defineConfig, devices } from "@playwright/test";
+
+// `next start` loads .env itself; the tests need it too, for the Admin's
+// seeded email and password.
+if (existsSync(".env")) {
+  process.loadEnvFile(".env");
+}
 
 const port = Number(process.env.PORT ?? 3000);
 // Set E2E_BASE_URL to test an app that's already running (CI points it at
@@ -15,13 +22,13 @@ export default defineConfig({
     trace: "retain-on-failure",
   },
   projects: [{ name: "chromium", use: { ...devices["Desktop Chrome"] } }],
-  // Runs the production build; run `pnpm build` first. Needs DATABASE_URL and
-  // WORKPLACE_TIME_ZONE pointing at a migrated database.
+  // Runs the production build; run `pnpm build` first. Needs the environment
+  // variables from .env.example, pointing at a migrated database.
   webServer: externalBaseURL
     ? undefined
     : {
         command: `pnpm start --port ${port}`,
-        url: `http://localhost:${port}`,
+        url: `http://localhost:${port}/login`,
         reuseExistingServer: !process.env.CI,
       },
 });

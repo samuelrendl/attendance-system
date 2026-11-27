@@ -39,7 +39,7 @@ services:
   # Applies the migrations, then exits. The app starts only if this succeeds.
   migrate:
     <<: *app-image
-    command: ["node", "scripts/migrate.mjs"]
+    command: ["node", "dist/migrate.mjs"]
     environment:
       <<: *database-url
     depends_on:

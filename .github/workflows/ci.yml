@@ -14,9 +14,6 @@ jobs:
   check:
     runs-on: ubuntu-latest
     timeout-minutes: 20
-    env:
-      DATABASE_URL: postgres://attendance:attendance@localhost:5432/attendance
-      WORKPLACE_TIME_ZONE: Europe/London
     steps:
       - uses: actions/checkout@v5
 
@@ -28,6 +25,11 @@ jobs:
           cache: pnpm
 
       - run: pnpm install --frozen-lockfile
+
+      # One set of settings for every step: the build, the Compose stack
+      # (env_file) and Playwright (which reads the seeded Admin from .env).
+      - name: Configure
+        run: cp .env.example .env
 
       - name: Lint
         run: pnpm lint
@@ -42,11 +44,9 @@ jobs:
         run: pnpm build
 
       # The production stack from compose.yaml: Postgres, migrate, then the
-      # app image built from the Dockerfile. .env comes from .env.example.
+      # app image built from the Dockerfile.
       - name: Start the Compose stack
-        run: |
-          cp .env.example .env
-          docker compose up --build --detach --wait
+        run: docker compose up --build --detach --wait
 
       - name: Install Playwright browser
         run: pnpm exec playwright install --with-deps chromium
@@ -54,7 +54,7 @@ jobs:
       - name: End-to-end tests against the Compose stack
         run: pnpm test:e2e
         env:
-          E2E_BASE_URL: http://127.0.0.1:3000
+          E2E_BASE_URL: http://localhost:3000
 
       - name: Compose logs
         if: failure()

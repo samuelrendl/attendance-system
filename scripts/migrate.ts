@@ -1,5 +1,5 @@
 // Applies the Drizzle migrations in ./drizzle to DATABASE_URL, then exits.
-// Production's migrate service runs this (bundled to scripts/migrate.mjs)
+// Production's migrate service runs this (bundled to dist/migrate.mjs)
 // instead of drizzle-kit, which isn't in the image. It uses the same
 // migrations table as `pnpm db:migrate`, so either can run against a database.
 // A failing migration is rolled back and exits non-zero.
