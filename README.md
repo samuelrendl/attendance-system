@@ -71,6 +71,10 @@ docker compose exec app node dist/reset-admin-password.mjs   # on the Pi
 
 To make a device a Kiosk, log in to the admin area on that device, open **Kiosks**, and activate it with a name. The device then gets a long-lived, HTTP-only cookie with a random device token (the database keeps only its hash) and opens `/kiosk`. It stays a Kiosk after the Admin logs out, until the Admin revokes it from the same page. Any other device sees "This device is not a Kiosk" at `/kiosk`. The cookie is Secure when `BETTER_AUTH_URL` is `https://`.
 
+## Employees
+
+The Admin adds, renames, re-PINs, Deactivates and reactivates Employees under **Employees** in the admin area. A PIN is exactly 4 digits, may be shared by several Employees, and is stored only as a scrypt hash, so it can be reset but never shown. A Deactivated Employee stays in the list, marked, and keeps their Time entries.
+
 ## Layout
 
 - `src/attendance/`: the **Attendance module**, the one home for every domain rule. Every operation takes `now` explicitly. Tests live next to it and run against PGlite with the real migrations.

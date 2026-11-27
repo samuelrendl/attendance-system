@@ -1,9 +1,11 @@
 import { fileURLToPath } from "node:url";
 import { PGlite } from "@electric-sql/pglite";
+import { eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/pglite";
 import { migrate } from "drizzle-orm/pglite/migrator";
 import { onTestFinished } from "vitest";
-import { createAttendance, schema } from "./index";
+import { createAttendance, schema, type AttendanceDatabase } from "./index";
+import { verifyPin } from "./pin";
 
 const migrationsFolder = fileURLToPath(new URL("../../drizzle", import.meta.url));
 
@@ -25,4 +27,23 @@ export async function createTestAttendance({
   timeZone = "Europe/London",
 }: { timeZone?: string } = {}) {
   return createAttendance({ db: await createTestDatabase(), timeZone });
+}
+
+/**
+ * What is stored for an Employee's PIN. Only for checking that PINs are
+ * hashed and that setting a PIN takes effect: until the Kiosk tap (ticket 06)
+ * checks PINs, nothing in the module's interface reveals whether a PIN matches.
+ */
+export async function storedPin(db: AttendanceDatabase, employeeId: string) {
+  const [row] = await db
+    .select({ pinHash: schema.employee.pinHash })
+    .from(schema.employee)
+    .where(eq(schema.employee.id, employeeId));
+  if (!row) {
+    throw new Error(`No Employee ${employeeId}`);
+  }
+  return {
+    stored: row.pinHash,
+    matches: (pin: string) => verifyPin(pin, row.pinHash),
+  };
 }

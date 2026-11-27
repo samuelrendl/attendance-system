@@ -11,6 +11,7 @@ export default function AdminLayout({ children }: LayoutProps<"/admin">) {
           <nav className="flex items-center gap-4 text-sm">
             <span className="font-heading font-semibold">Attendance</span>
             <Link href="/admin">On site now</Link>
+            <Link href="/admin/employees">Employees</Link>
             <Link href="/admin/kiosks">Kiosks</Link>
           </nav>
           <LogOutButton />
