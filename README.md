@@ -71,6 +71,10 @@ docker compose exec app node dist/reset-admin-password.mjs   # on the Pi
 
 To make a device a Kiosk, log in to the admin area on that device, open **Kiosks**, and activate it with a name. The device then gets a long-lived, HTTP-only cookie with a random device token (the database keeps only its hash) and opens `/kiosk`. It stays a Kiosk after the Admin logs out, until the Admin revokes it from the same page. Any other device sees "This device is not a Kiosk" at `/kiosk`. The cookie is Secure when `BETTER_AUTH_URL` is `https://`.
 
+## Clocking in and out
+
+On an activated Kiosk, an Employee taps their name, enters their PIN, and is clocked in or out: out if they are On site, in otherwise. The confirmation shows which, the time, and the hours worked today, then the Kiosk returns to the names. An open Time entry more than 16 hours old is a Missed clock-out: it no longer counts as On site, and the Employee's next tap clocks them in afresh. **On site now** in the admin area lists who is On site.
+
 ## Employees
 
 The Admin adds, renames, re-PINs, Deactivates and reactivates Employees under **Employees** in the admin area. A PIN is exactly 4 digits, may be shared by several Employees, and is stored only as a scrypt hash, so it can be reset but never shown. A Deactivated Employee stays in the list, marked, and keeps their Time entries.

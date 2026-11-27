@@ -36,7 +36,7 @@ async function OnSiteNow() {
   });
 
   return (
-    <ul className="divide-y rounded-lg border">
+    <ul aria-label="On site now" className="divide-y rounded-lg border">
       {onSite.map((employee) => (
         <li
           key={employee.employeeId}

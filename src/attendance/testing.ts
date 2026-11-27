@@ -31,8 +31,7 @@ export async function createTestAttendance({
 
 /**
  * What is stored for an Employee's PIN. Only for checking that PINs are
- * hashed and that setting a PIN takes effect: until the Kiosk tap (ticket 06)
- * checks PINs, nothing in the module's interface reveals whether a PIN matches.
+ * stored hashed. Whether a PIN matches can be checked through `tap` instead.
  */
 export async function storedPin(db: AttendanceDatabase, employeeId: string) {
   const [row] = await db

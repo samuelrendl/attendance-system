@@ -1,5 +1,6 @@
 import { asc, eq, sql } from "drizzle-orm";
 import type { PgUpdateSetSource } from "drizzle-orm/pg-core";
+import { isUuid } from "./ids";
 import type { AttendanceDatabase } from "./index";
 import { hashPin, isValidPin } from "./pin";
 import { employee } from "./schema";
@@ -130,9 +131,4 @@ function nameProblems(name: string): EmployeeProblem[] {
 
 function pinProblems(pin: string): EmployeeProblem[] {
   return isValidPin(pin) ? [] : ["pin-not-4-digits"];
-}
-
-/** Ids come from URLs and forms; anything that isn't a UUID can't be an Employee. */
-function isUuid(id: string): boolean {
-  return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
 }
