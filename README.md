@@ -68,7 +68,7 @@ docker compose exec app node dist/reset-admin-password.mjs   # on the Pi
 - `src/auth/`: **Admin access** on Better Auth (Drizzle adapter, sign-up disabled): log in and out, read the Admin session, create the Admin on first start, reset the password. Its tables are in `src/auth/schema.ts`.
 - `src/server/`: wiring for the web layer (configuration, the database connection, `requireAdmin()` in `admin-session.ts`, the start-up hook).
 - `src/proxy.ts`: sends visitors without a session cookie from `/admin` to `/login`. Only a fast path; the real check is `requireAdmin()`.
-- `scripts/`: command-line tools, bundled into `dist/` by `pnpm build`.
+- `scripts/`: command-line tools. `reset-admin-password.ts` is bundled into `dist/` by `pnpm build`; `setup-pi.sh` is the one-time Pi setup wizard.
 - `src/app/`: Next.js pages. They call the Attendance module and render; no domain rules live here. Every admin page and Server Action calls `requireAdmin()` from `src/server/admin-session.ts` first.
 - `drizzle/`: migrations.
 - `e2e/`: Playwright tests.
