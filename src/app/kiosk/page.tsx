@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
+import { getServer } from "@/server/attendance";
 import { currentKiosk } from "@/server/kiosk-device";
+import { KioskTap } from "./kiosk-tap";
 
 export const metadata: Metadata = {
   title: "Kiosk · Attendance",
@@ -32,13 +34,16 @@ async function KioskScreen() {
     );
   }
 
+  // Reading the cookie above made this request-time, so `new Date()` is safe here.
+  const employees = await getServer().attendance.listKioskEmployees(new Date());
+
   return (
     <>
       <header className="flex items-baseline justify-between gap-4">
         <h1 className="font-heading text-2xl font-semibold">Clock in or out</h1>
         <span className="text-sm text-muted-foreground">{kiosk.name}</span>
       </header>
-      {/* Ticket 05 adds the list of Employees here. */}
+      <KioskTap employees={employees} />
     </>
   );
 }
