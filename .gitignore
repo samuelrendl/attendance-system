@@ -44,3 +44,9 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Bundled scripts (pnpm build:scripts)
+/dist/
+
+# Local Compose backups (BACKUP_DIR default)
+/backups/
