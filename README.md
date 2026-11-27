@@ -51,6 +51,16 @@ Every setting is an environment variable; `.env.example` documents them.
 - `drizzle/`: migrations.
 - `e2e/`: Playwright tests.
 
+## Production: one-time Pi setup
+
+The app runs on a Raspberry Pi over Tailscale (see `docs/adr/0001-self-host-on-raspberry-pi.md`). To set up a Pi, Tailscale and the GitHub secrets for releases, run the wizard in Git Bash from the repo:
+
+```sh
+./scripts/setup-pi.sh
+```
+
+It walks through each step, runs the Pi's commands over SSH, and keeps its answers in `.env.pi` (git-ignored), so it can be re-run safely. On the Pi, the app lives in `~/attendance/`, with its settings in `~/attendance/.env`.
+
 ## Known issue: `pnpm add` with pnpm 10.25
 
 pnpm 10.25 crashes on `pnpm add` ("Cannot read properties of undefined (reading 'manifest')") whenever `components.json` is in the project root, which also breaks `shadcn init` and can break `shadcn add`. Until that's fixed, add the dependency to `package.json` by hand and run `pnpm install`, or move `components.json` aside for the `pnpm add`.
