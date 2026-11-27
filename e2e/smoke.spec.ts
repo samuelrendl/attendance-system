@@ -1,7 +1,8 @@
 import { expect, test } from "@playwright/test";
+import { logInAsAdmin } from "./admin";
 
 test("the admin page shows who is on site now", async ({ page }) => {
-  await page.goto("/admin");
+  await logInAsAdmin(page);
 
   await expect(
     page.getByRole("heading", { name: "On site now" }),

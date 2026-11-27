@@ -17,6 +17,10 @@ jobs:
     env:
       DATABASE_URL: postgres://attendance:attendance@localhost:5432/attendance
       WORKPLACE_TIME_ZONE: Europe/London
+      BETTER_AUTH_SECRET: ci-only-secret-that-is-at-least-32-characters
+      BETTER_AUTH_URL: http://localhost:3000
+      ADMIN_EMAIL: admin@example.com
+      ADMIN_INITIAL_PASSWORD: ci-admin-password
     steps:
       - uses: actions/checkout@v5
 

@@ -15,6 +15,8 @@ const eslintConfig = defineConfig([
     // Playwright output:
     "test-results/**",
     "playwright-report/**",
+    // Bundled scripts (pnpm build:scripts):
+    "dist/**",
   ]),
 ]);
 

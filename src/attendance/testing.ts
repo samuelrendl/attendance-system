@@ -8,18 +8,21 @@ import { createAttendance, schema } from "./index";
 const migrationsFolder = fileURLToPath(new URL("../../drizzle", import.meta.url));
 
 /**
- * An Attendance module backed by a fresh in-process Postgres (PGlite)
- * with the project's migrations applied. Call it inside a test: the
- * database is closed when that test finishes.
+ * A fresh in-process Postgres (PGlite) with the project's migrations applied.
+ * Call it inside a test: the database is closed when that test finishes.
  */
-export async function createTestAttendance({
-  timeZone = "Europe/London",
-}: { timeZone?: string } = {}) {
+export async function createTestDatabase() {
   const client = new PGlite();
   onTestFinished(() => client.close());
 
   const db = drizzle({ client, schema });
   await migrate(db, { migrationsFolder });
+  return db;
+}
 
-  return createAttendance({ db, timeZone });
+/** An Attendance module backed by a fresh test database (see `createTestDatabase`). */
+export async function createTestAttendance({
+  timeZone = "Europe/London",
+}: { timeZone?: string } = {}) {
+  return createAttendance({ db: await createTestDatabase(), timeZone });
 }
