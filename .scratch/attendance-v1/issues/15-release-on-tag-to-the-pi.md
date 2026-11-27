@@ -20,3 +20,10 @@ Success or failure is visible in GitHub Actions. Re-running the release for an o
 - [ ] Re-running the release for an older tag deploys that version
 - [ ] Pushes and PRs to `main` don't deploy
 - [ ] No secrets appear in the repo or the logs
+
+## Comments
+
+**2026-11-27 (agent, from ticket 14):** The setup wizard (`scripts/setup-pi.sh`) creates these. Use exactly these names:
+- Secrets: `TS_OAUTH_CLIENT_ID` and `TS_OAUTH_SECRET`, for `tailscale/github-action@v4` with `tags: tag:ci`. Also `PI_SSH_PRIVATE_KEY` (ed25519, stored with a trailing newline).
+- Variables (`vars.*`): `PI_HOST` (the Pi's MagicDNS `*.ts.net` name), `PI_USER`, and `PI_SSH_KNOWN_HOSTS` (the Pi's ed25519 host key, keyed by `PI_HOST`). Use it with `StrictHostKeyChecking=yes`.
+- On the Pi: deploy into `~/attendance/`. `~/attendance/.env` already holds every production setting, so the workflow must not write or print it. Copy `compose.yaml` there, set the image tag, then run `docker compose pull && docker compose up -d`. The Pi is already logged in to `ghcr.io`.
