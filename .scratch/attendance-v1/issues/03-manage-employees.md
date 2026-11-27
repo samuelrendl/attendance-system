@@ -25,7 +25,7 @@ PINs are stored only as a slow password hash, and they don't have to be unique. 
 
 ## Comments
 
-**2026-11-27 (agent):** Implemented. Lint, typecheck, Vitest (25 new Attendance-module tests in `src/attendance/employees.test.ts`) and the build pass. All Playwright tests pass against the production build on a PGlite server, including a new `e2e/employees.spec.ts` that adds, renames, re-PINs, Deactivates and reactivates an Employee. Nothing left unverified.
+**2026-11-27 (agent):** Implemented. Lint, typecheck, Vitest (30 new Attendance-module tests in `src/attendance/employees.test.ts`) and the build pass. All Playwright tests pass against the production build on a PGlite server, including a new `e2e/employees.spec.ts` that adds, renames, re-PINs, Deactivates and reactivates an Employee. Nothing left unverified.
 
 What later tickets need to know:
 
