@@ -62,14 +62,18 @@ docker compose exec app node dist/reset-admin-password.mjs   # on the Pi
 
 `dist/reset-admin-password.mjs` is a single bundled file with no dependencies, built by `pnpm build`, so the production image only has to copy it.
 
+## Kiosks
+
+To make a device a Kiosk, log in to the admin area on that device, open **Kiosks**, and activate it with a name. The device then gets a long-lived, HTTP-only cookie with a random device token (the database keeps only its hash) and opens `/kiosk`. It stays a Kiosk after the Admin logs out, until the Admin revokes it from the same page. Any other device sees "This device is not a Kiosk" at `/kiosk`. The cookie is Secure when `BETTER_AUTH_URL` is `https://`.
+
 ## Layout
 
 - `src/attendance/`: the **Attendance module**, the one home for every domain rule. Every operation takes `now` explicitly. Tests live next to it and run against PGlite with the real migrations.
 - `src/auth/`: **Admin access** on Better Auth (Drizzle adapter, sign-up disabled): log in and out, read the Admin session, create the Admin on first start, reset the password. Its tables are in `src/auth/schema.ts`.
-- `src/server/`: wiring for the web layer (configuration, the database connection, `requireAdmin()` in `admin-session.ts`, the start-up hook).
-- `src/proxy.ts`: sends visitors without a session cookie from `/admin` to `/login`. Only a fast path; the real check is `requireAdmin()`.
+- `src/server/`: wiring for the web layer (configuration, the database connection, `requireAdmin()` in `admin-session.ts`, `currentKiosk()` in `kiosk-device.ts`, the start-up hook).
+- `src/proxy.ts`: sends visitors without a session cookie from `/admin` to `/login`. Only a fast path; the real check is `requireAdmin()`. On `/kiosk` it sets the Kiosk cookie again, so its expiry keeps moving on.
 - `scripts/`: command-line tools. `reset-admin-password.ts` is bundled into `dist/` by `pnpm build`; `setup-pi.sh` is the one-time Pi setup wizard.
-- `src/app/`: Next.js pages. They call the Attendance module and render; no domain rules live here. Every admin page and Server Action calls `requireAdmin()` from `src/server/admin-session.ts` first.
+- `src/app/`: Next.js pages. They call the Attendance module and render; no domain rules live here. Every admin page and Server Action calls `requireAdmin()` from `src/server/admin-session.ts` first; every Kiosk page and Server Action calls `currentKiosk()` from `src/server/kiosk-device.ts` instead, and never needs an Admin session.
 - `drizzle/`: migrations.
 - `e2e/`: Playwright tests.
 
