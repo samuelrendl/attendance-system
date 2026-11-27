@@ -9,7 +9,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build && pnpm build:scripts",
-    "build:scripts": "esbuild scripts/reset-admin-password.ts --bundle --platform=node --target=node24 --format=esm --outfile=dist/reset-admin-password.mjs --external:pg-native --banner:js=\"import { createRequire } from 'node:module'; const require = createRequire(import.meta.url);\"",
+    "build:scripts": "node build-scripts.mjs",
     "start": "next start",
     "lint": "eslint",
     "typecheck": "next typegen && tsc --noEmit",

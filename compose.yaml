@@ -1,21 +1,117 @@
-# Local development stack. For now this is only Postgres; the app, migrate
-# and backup services arrive with the production image (ticket 13).
+# The whole stack (ADR-0001): Postgres, a one-off migrate step, the app and a
+# nightly backup. Development usually starts only `db` (see README).
+#
+# Configuration: the app and migrate services get every variable in .env
+# (env_file), so a new app setting only needs adding to .env.example. The
+# variables in the "Compose" section of .env.example are read by this file.
+#
+# Deploying a new IMAGE_TAG: `docker compose run --rm migrate` first, then
+# `docker compose up --detach --wait`. A bare `up` removes the old app
+# container before migrate has finished (see README "Production stack").
+
+x-app-image: &app-image
+  image: ${IMAGE:-ghcr.io/samuelrendl/attendance-system}:${IMAGE_TAG:-local}
+  build: .
+  env_file: .env
+
+x-database-url: &database-url
+  # Overrides the DATABASE_URL in .env, which points at the host for `pnpm dev`.
+  DATABASE_URL: postgres://${POSTGRES_USER:-attendance}:${POSTGRES_PASSWORD:-attendance}@db:5432/${POSTGRES_DB:-attendance}
+
 services:
   db:
     image: postgres:18-alpine
+    restart: unless-stopped
     environment:
-      POSTGRES_USER: attendance
-      POSTGRES_PASSWORD: attendance
-      POSTGRES_DB: attendance
+      POSTGRES_USER: ${POSTGRES_USER:-attendance}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-attendance}
+      POSTGRES_DB: ${POSTGRES_DB:-attendance}
     ports:
-      - "5432:5432"
+      - "127.0.0.1:${DB_PORT:-5432}:5432"
     volumes:
       - db-data:/var/lib/postgresql
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U attendance -d attendance"]
+      test: ["CMD-SHELL", "pg_isready -U \"$$POSTGRES_USER\" -d \"$$POSTGRES_DB\""]
       interval: 2s
       timeout: 5s
       retries: 15
+
+  # Applies the migrations, then exits. The app starts only if this succeeds.
+  migrate:
+    <<: *app-image
+    command: ["node", "dist/migrate.mjs"]
+    environment:
+      <<: *database-url
+    depends_on:
+      db:
+        condition: service_healthy
+
+  app:
+    <<: *app-image
+    restart: unless-stopped
+    environment:
+      <<: *database-url
+    ports:
+      - "127.0.0.1:${APP_PORT:-3000}:3000"
+    depends_on:
+      db:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    healthcheck:
+      test:
+        - CMD
+        - node
+        - -e
+        - "fetch('http://127.0.0.1:3000/').then(r => process.exit(r.ok ? 0 : 1), () => process.exit(1))"
+      interval: 5s
+      timeout: 3s
+      start_period: 10s
+      retries: 6
+
+  # pg_dump on BACKUP_SCHEDULE into BACKUP_DIR, keeping the newest BACKUP_KEEP.
+  # On demand: docker compose exec backup backup
+  # The script lives in `command` (not a mounted file or `configs`) so that
+  # compose.yaml is the only file the Pi needs, and so that changing it
+  # recreates the container.
+  backup:
+    image: postgres:18-alpine
+    restart: unless-stopped
+    environment:
+      TZ: ${WORKPLACE_TIME_ZONE:-UTC}
+      PGHOST: db
+      PGUSER: ${POSTGRES_USER:-attendance}
+      PGPASSWORD: ${POSTGRES_PASSWORD:-attendance}
+      PGDATABASE: ${POSTGRES_DB:-attendance}
+      BACKUP_SCHEDULE: ${BACKUP_SCHEDULE:-0 2 * * *}
+      BACKUP_KEEP: ${BACKUP_KEEP:-14}
+    volumes:
+      - ${BACKUP_DIR:-./backups}:/backups
+    command:
+      - sh
+      - -euc
+      - |
+        cat > /usr/local/bin/backup <<'SCRIPT'
+        #!/bin/sh
+        # Writes one restorable dump (pg_restore format), then prunes old ones.
+        set -eu
+        file="/backups/attendance-$$(date +%Y-%m-%dT%H%M%S).dump"
+        pg_dump --format=custom --file="$$file.partial"
+        mv "$$file.partial" "$$file"
+        echo "Backup written: $$file"
+        ls -1 /backups/attendance-*.dump | sort -r | tail -n +$$((BACKUP_KEEP + 1)) |
+          while read -r old; do
+            rm -- "$$old"
+            echo "Backup pruned: $$old"
+          done
+        SCRIPT
+        chmod +x /usr/local/bin/backup
+        echo "$$BACKUP_SCHEDULE backup > /proc/1/fd/1 2>&1" > /etc/crontabs/root
+        echo "Backups scheduled: $$BACKUP_SCHEDULE ($$TZ), keeping $$BACKUP_KEEP"
+        exec crond -f -d 6
+    depends_on:
+      db:
+        condition: service_healthy
 
 volumes:
   db-data:
