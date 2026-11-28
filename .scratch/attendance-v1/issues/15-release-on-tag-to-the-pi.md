@@ -14,12 +14,12 @@ Success or failure is visible in GitHub Actions. Re-running the release for an o
 
 **Status:** ready-for-human
 
-- [ ] Pushing a `v*` tag builds and pushes an arm64 image to GHCR tagged with the version
-- [ ] The workflow deploys that version to the Pi over Tailscale SSH, and the app at the Tailscale Serve address shows the new version
+- [x] Pushing a `v*` tag builds and pushes an arm64 image to GHCR tagged with the version
+- [x] The workflow deploys that version to the Pi over Tailscale SSH, and the app at the Tailscale Serve address shows the new version
 - [x] A failing migration fails the workflow and leaves the previous version serving
 - [ ] Re-running the release for an older tag deploys that version
 - [x] Pushes and PRs to `main` don't deploy
-- [ ] No secrets appear in the repo or the logs
+- [x] No secrets appear in the repo or the logs
 
 ## Comments
 
@@ -99,3 +99,10 @@ Likely first-run snags:
 - `.env` on the Pi is still never touched by releases, except its `IMAGE_TAG` line.
 
 **2026-11-28 (agent, orchestrator):** Merged into `attendance-v1`. Set to ready-for-human, because the four unticked boxes can only be ticked by the owner's first real release, following the steps above. Resolve this ticket after that run.
+
+**2026-11-28 (agent):** First real release. PR #1 merged to `main` (`67c88dc`), and `v0.1.0` was pushed. CI on the PR was green, including 12 Playwright tests against the Compose stack, which ticks ticket 13's last box.
+- The first deploy failed safely. The app container was unhealthy, and `deploy.sh` exited 1 with "v0.1.0 didn't start". The cause was `WORKPLACE_TIME_ZONE='Prague'` in the Pi's `.env`, typed at the wizard's stage 11; the app rightly refuses a non-IANA zone. It was fixed to `Europe/Prague` on the Pi and in `.env.pi`, and the failed deploy job was re-run: `==> Deployed v0.1.0`.
+- `https://raspberrypi.tailc561fe.ts.net/login` returns 200 over HTTPS and shows `v0.1.0`. `/kiosk` returns 200. `/admin` without a session redirects to `/login`.
+- The run's log has no private key material, and secrets appear only as `***`.
+- **Still to verify:** rollback (box 4). Push a later tag, then re-run v0.1.0's Release run and check the page shows `v0.1.0` again.
+- **Follow-up:** `scripts/setup-pi.sh` should validate `WORKPLACE_TIME_ZONE` as an IANA name at stage 11, so a typo is caught before it reaches the Pi.

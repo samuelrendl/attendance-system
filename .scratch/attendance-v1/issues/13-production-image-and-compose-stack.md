@@ -21,7 +21,7 @@ The image must build for arm64 as well as amd64. CI's Playwright E2E switches to
 - [x] The image uses standalone output and builds for both arm64 and amd64
 - [x] The backup service produces a restorable `pg_dump` on schedule (and on demand for testing) into a mounted directory, pruning old dumps
 - [x] All configuration comes from environment variables, and an example env file documents them
-- [ ] CI runs the Playwright E2E against the Compose stack
+- [x] CI runs the Playwright E2E against the Compose stack
 
 ## Comments
 
