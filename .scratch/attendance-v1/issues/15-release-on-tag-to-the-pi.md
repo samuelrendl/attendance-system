@@ -12,7 +12,7 @@ Success or failure is visible in GitHub Actions. Re-running the release for an o
 
 **Blocked by:** 13 (Production image and Compose stack), 14 (One-time Pi, Tailscale and GitHub setup)
 
-**Status:** ready-for-agent
+**Status:** ready-for-human
 
 - [ ] Pushing a `v*` tag builds and pushes an arm64 image to GHCR tagged with the version
 - [ ] The workflow deploys that version to the Pi over Tailscale SSH, and the app at the Tailscale Serve address shows the new version
@@ -97,3 +97,5 @@ Likely first-run snags:
 - Releases keep every old image on the Pi so rollbacks are fast. Prune now and then (`docker image prune -a` keeps the running ones).
 - Migrations should stay additive, because a rollback runs old code against the newer schema.
 - `.env` on the Pi is still never touched by releases, except its `IMAGE_TAG` line.
+
+**2026-11-28 (agent, orchestrator):** Merged into `attendance-v1`. Set to ready-for-human, because the four unticked boxes can only be ticked by the owner's first real release, following the steps above. Resolve this ticket after that run.

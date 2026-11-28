@@ -8,7 +8,7 @@ The Admin can see the list of Kiosks and revoke any of them, after which that de
 
 **Blocked by:** 02 (Admin login)
 
-**Status:** ready-for-agent
+**Status:** resolved
 
 - [x] The Admin can activate the current device as a Kiosk with a name; the Kiosk page then works on that device, even after logging out of the admin area
 - [x] The device token is stored only as a hash

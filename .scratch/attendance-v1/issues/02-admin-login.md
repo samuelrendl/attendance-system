@@ -8,7 +8,7 @@ On first start, if no Admin exists, one is created from the configured email and
 
 **Blocked by:** 01 (Walking skeleton)
 
-**Status:** ready-for-agent
+**Status:** resolved
 
 - [x] Visiting the admin area without a session redirects to the login page
 - [x] The Admin can log in with the seeded email and password and reach the admin area

@@ -14,7 +14,7 @@ The image must build for arm64 as well as amd64. CI's Playwright E2E switches to
 
 **Blocked by:** 01 (Walking skeleton)
 
-**Status:** ready-for-agent
+**Status:** resolved
 
 - [x] One Compose command starts Postgres, runs migrations, then starts the app
 - [x] A failing migration stops the app from starting, and a previously running app container is left untouched
@@ -41,3 +41,5 @@ The image must build for arm64 as well as amd64. CI's Playwright E2E switches to
 - **Merged with ticket 02:** 02's one-file esbuild command was replaced by the generic `build-scripts.mjs`, which outputs to `dist/` too, so 02's `dist/reset-admin-password.mjs` and `pnpm admin:reset-password` are unchanged. Inside the stack, `echo <pw> | docker compose exec -T app node dist/reset-admin-password.mjs` works. The Admin is seeded on start, and the migrate service applied both migrations. All 5 Playwright tests pass against the Compose stack. New container commands go in `scripts/<name>.ts`, which may import from `@/...`.
 - **Not verified:** the CI box. `ci.yml` now copies `.env.example` to `.env` as its first step. That replaces the job-level env block: Compose's app and Playwright have to agree on the seeded Admin password, so both now read `.env`. It then runs `docker compose up --build --detach --wait`, then Playwright with `E2E_BASE_URL=http://localhost:3000` (localhost, to match `BETTER_AUTH_URL`'s origin), and adds an `image-arm64` job that runs `docker build .` on `ubuntu-24.04-arm`. I ran the same steps locally, but not on GitHub. Tick it once the first push is green.
 - `pnpm start` (`next start`) still works with `output: "standalone"`, so local `pnpm test:e2e` without `E2E_BASE_URL` is unchanged.
+
+**2026-11-28 (agent, orchestrator):** Resolved. The one unticked box ("CI runs the Playwright E2E against the Compose stack") is ticked by the first green CI run on `main`, when the owner merges `attendance-v1` (see ticket 15's release steps).

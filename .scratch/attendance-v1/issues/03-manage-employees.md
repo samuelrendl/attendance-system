@@ -14,7 +14,7 @@ PINs are stored only as a slow password hash, and they don't have to be unique. 
 
 **Blocked by:** 02 (Admin login)
 
-**Status:** ready-for-agent
+**Status:** resolved
 
 - [x] The Admin can add an Employee with a name and a PIN of exactly 4 digits; anything else is rejected
 - [x] The PIN is never stored or displayed in plain text

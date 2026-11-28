@@ -19,7 +19,7 @@ Rules, all in the Attendance module:
 
 **Blocked by:** 03 (Manage Employees), 04 (Activate and revoke Kiosks)
 
-**Status:** ready-for-agent
+**Status:** resolved
 
 - [x] On an activated Kiosk, tapping a name and entering the right PIN clocks an Employee in who isn't On site, and out who is
 - [x] The confirmation shows in or out, the time, and the hours worked today, then returns to the name list
