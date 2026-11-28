@@ -217,6 +217,12 @@ from_pi() { ssh "$PI_USER@$PI_LAN_HOST" "$1"; }
 # Output is captured before grepping: under pipefail, an early-exiting
 # `grep -q` can kill the writer with SIGPIPE and fail a check that passed.
 has_secret() { local list; list=$(gh secret list 2>/dev/null || true); grep -q "^$1[[:space:]]" <<<"$list"; }
+# Print the canonical IANA name for a time zone (e.g. europe/prague → Europe/Prague),
+# or fail if it's unknown. It's the same Intl.DateTimeFormat check the app makes
+# at start-up, so anything that passes here won't stop the app from starting.
+canonical_time_zone() {
+  node -e 'process.stdout.write(new Intl.DateTimeFormat("en", { timeZone: process.argv[1] }).resolvedOptions().timeZone)' "$1" 2>/dev/null
+}
 
 banner "Raspberry Pi, Tailscale and GitHub setup"
 
@@ -446,7 +452,21 @@ if [[ "$WRITE_PROD_ENV" == yes ]]; then
     if (( ${#ADMIN_INITIAL_PASSWORD} >= 12 )) && [[ "$ADMIN_INITIAL_PASSWORD" != *"'"* ]]; then break; fi
     warn "Use at least 12 characters and no single quotes."
   done
-  ask WORKPLACE_TIME_ZONE "Workplace time zone (IANA name, e.g. Europe/London):"
+  while :; do
+    ask WORKPLACE_TIME_ZONE "Workplace time zone (IANA name, e.g. Europe/Prague):"
+    if ! command -v node >/dev/null 2>&1; then
+      # Without Node the name can't be checked, so insist on the Area/City shape.
+      [[ "$WORKPLACE_TIME_ZONE" == */* ]] && break
+      warn "Node isn't installed here, so the name can't be checked. Use the exact Area/City form, e.g. Europe/Prague."
+      continue
+    fi
+    if TZ_CANONICAL=$(canonical_time_zone "$WORKPLACE_TIME_ZONE") && [[ -n "$TZ_CANONICAL" ]]; then
+      WORKPLACE_TIME_ZONE="$TZ_CANONICAL"
+      break
+    fi
+    warn "\"$WORKPLACE_TIME_ZONE\" isn't a time zone name the app accepts. Use Area/City, e.g. Europe/Prague."
+    note "Full list: https://en.wikipedia.org/wiki/List_of_tz_database_time_zones"
+  done
   # Generated once. Re-runs reuse the copy in .env.pi, because the database
   # keeps the password it was first created with.
   POSTGRES_PASSWORD=$(_existing POSTGRES_PASSWORD || openssl rand -hex 24)

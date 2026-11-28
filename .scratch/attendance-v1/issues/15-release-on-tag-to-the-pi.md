@@ -106,3 +106,5 @@ Likely first-run snags:
 - The run's log has no private key material, and secrets appear only as `***`.
 - **Still to verify:** rollback (box 4). Push a later tag, then re-run v0.1.0's Release run and check the page shows `v0.1.0` again.
 - **Follow-up:** `scripts/setup-pi.sh` should validate `WORKPLACE_TIME_ZONE` as an IANA name at stage 11, so a typo is caught before it reaches the Pi.
+
+**2026-11-28 (agent):** Follow-up done. `scripts/setup-pi.sh` stage 11 now checks `WORKPLACE_TIME_ZONE` with the same `Intl.DateTimeFormat` rule the app uses at start-up, re-asks on an unknown name, and saves the canonical spelling (`europe/prague` → `Europe/Prague`). Without Node it insists on the Area/City form.
